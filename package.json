@@ -1,0 +1,29 @@
+{
+  "name": "pos_front_end",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "history": "latest",
+    "react": "^16.8.4",
+    "react-confirm-alert": "^2.3.0",
+    "react-dom": "^16.8.4",
+    "react-router-dom": "latest",
+    "react-scripts": "2.1.8",
+    "react-modal": "latest"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}
