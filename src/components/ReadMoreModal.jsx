@@ -3,6 +3,9 @@ import Products from './Products';
 import OrderItems from './OrderItems';
 import Modal from 'react-modal';
 
+const customStyles = {
+    width: 100
+};
 Modal.setAppElement('#root');
 
 class ReadMoreModal extends Component {
@@ -25,33 +28,38 @@ class ReadMoreModal extends Component {
     handleAddToOrder(product) {
         console.log("add order item", product.id);
         let orderList = [...this.state.orderItems];
-        let newOrderItem = {
-            "id": product.id,
-            "name": product.name,
-            "unitPrice": product.unitPrice,
-            "availability": product.availability - 1,
-            "order_product": {
-                "numItems": 1,
-                "productId": product.id,
-                "orderId": this.state.orderId
-            }
-        };
-        let payload = {availability: product.availability - 1};
-        fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + product.id, {
-            method: 'POST', headers: {
-                'Content-Type': ' application/json'
-            }, body: JSON.stringify(payload)
-        }).then(res => res.json())
-            .then((result) => {
-                    if (result.orderId) {
-                        orderList.push(newOrderItem);
-                        this.setState({orderItems: orderList});
-                    }
-                }, (error) => {
-                    console.log("Error occurred while adding product to order", error);
-                    alert("Error occurred while adding product to order");
+        const similarOrderItem = orderList.filter(orderItem => orderItem.id === product.id);
+        if (similarOrderItem.length === 0) {
+            let newOrderItem = {
+                "id": product.id,
+                "name": product.name,
+                "unitPrice": product.unitPrice,
+                "availability": product.availability - 1,
+                "order_product": {
+                    "numItems": 1,
+                    "productId": product.id,
+                    "orderId": this.state.orderId
                 }
-            );
+            };
+            let payload = {availability: product.availability - 1};
+            fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + product.id, {
+                method: 'POST', headers: {
+                    'Content-Type': ' application/json'
+                }, body: JSON.stringify(payload)
+            }).then(res => res.json())
+                .then((result) => {
+                        if (result.orderId) {
+                            orderList.push(newOrderItem);
+                            this.setState({orderItems: orderList});
+                        }
+                    }, (error) => {
+                        console.log("Error occurred while adding product to order", error);
+                        alert("Error occurred while adding product to order");
+                    }
+                );
+        } else {
+            alert(product.name + " is already added to Order");
+        }
     }
 
     handleRemoveItem(productId, currentAmount, available) {
@@ -85,7 +93,7 @@ class ReadMoreModal extends Component {
             }).then(res => res.json())
                 .then((result) => {
                         if (result.numItems) {
-                            const orderItem = this.state.orderItems.filter(orderItem => orderItem.id === productId)[0];
+                            const orderItem = orderList.filter(orderItem => orderItem.id === productId)[0];
                             const index = orderList.indexOf(orderItem);
                             orderList[index] = {...orderItem};
                             orderList[index].order_product.numItems++;
@@ -114,7 +122,7 @@ class ReadMoreModal extends Component {
                 .then(res => res.json())
                 .then((result) => {
                         if (result.numItems) {
-                            const orderItem = this.state.orderItems.filter(orderItem => orderItem.id === productId)[0];
+                            const orderItem = orderList.filter(orderItem => orderItem.id === productId)[0];
                             const index = orderList.indexOf(orderItem);
                             orderList[index] = {...orderItem};
                             orderList[index].order_product.numItems--;
@@ -165,10 +173,11 @@ class ReadMoreModal extends Component {
 
     renderAddNewProducts(open) {
         if (open) {
-            return (<React.Fragment><h3>Add New Products</h3>
+            return (<React.Fragment><h3>Add Products To Order</h3>
                 <input type="text" className="form-control" name="query" onKeyUp={this.onChangeUpdateState} placeholder="Search products Here"
                        autoComplete="off"/>
                 <Products products={this.state.queriedProducts} onAdd={this.handleAddToOrder}/>
+                <br/>
                 <hr/>
             </React.Fragment>);
         }
@@ -178,7 +187,12 @@ class ReadMoreModal extends Component {
         if (open) {
             return (<React.Fragment>
                 <button type="button" className="btn btn-danger" onClick={() => this.props.onDeleteOrder(this.state.orderId)}><b>Delete Order</b></button>
-                <button type="button" className="btn btn-info" onClick={() => this.props.onCloseOrder(this.state.orderId)}><b>Close Order/Window</b></button>
+                <button type="button" className="btn btn-info" onClick={() => this.props.onCloseOrder(this.state.orderId)}><b>Finish Order & Close</b></button>
+                <button type="button" className="btn btn-secondary" onClick={() => this.props.onClose(this.state.orderId)}><b>Save & Close</b></button>
+            </React.Fragment>);
+        } else {
+            return (<React.Fragment>
+                <button type="button" className="btn btn-secondary" onClick={() => this.props.onClose(this.state.orderId)}><b>Close</b></button>
             </React.Fragment>);
         }
     }
@@ -186,13 +200,13 @@ class ReadMoreModal extends Component {
     render() {
         return (
             <React.Fragment>
-                <Modal isOpen={this.state.modalIsOpen} onAfterOpen={this.afterOpenModal} onRequestClose={this.closeModal} className="Model"
-                       contentLabel="Order Modal" style={{width: '100%'}}>
+                <Modal style={customStyles} isOpen={this.state.modalIsOpen} onAfterOpen={this.afterOpenModal} onRequestClose={this.closeModal} className="Model"
+                       contentLabel="Order Details Modal">
                     <div className="modal-dialog" role="document">
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title">Order Details of Order <span className="badge badge-primary"
-                                                                                         style={{fontSize: 16}}>#{this.state.orderId}</span></h5>
+                                <h5 className="modal-title">Order Details of Order <span className="badge badge-primary" style={{fontSize: 16}}>
+                                    {this.state.orderId}</span></h5>
                                 <button type="button" style={{color: 'red'}} className="close" onClick={() => this.props.onClose()} aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -209,8 +223,6 @@ class ReadMoreModal extends Component {
                             </div>
                             <div className="modal-footer">
                                 {this.renderButtons(this.props.open)}
-                                <button type="button" className="btn btn-secondary" onClick={() => this.props.onClose(this.state.orderId)}><b>Close Window</b>
-                                </button>
                             </div>
                         </div>
                     </div>

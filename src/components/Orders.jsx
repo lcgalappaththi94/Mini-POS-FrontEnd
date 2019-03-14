@@ -51,7 +51,7 @@ class Orders extends Component {
                     this.handleCloseModal();
                 }, (error) => {
                     console.log("error occurred while updating orders", error);
-                    alert("Error occurred while closing order "+orderId);
+                    alert("Error occurred while closing order " + orderId);
                 }
             );
     }
@@ -76,7 +76,7 @@ class Orders extends Component {
                                     }
                                 }, (error) => {
                                     console.log("error occurred while deleting order", error);
-                                    alert("Error occurred while deleting order "+orderId);
+                                    alert("Error occurred while deleting order " + orderId);
                                 }
                             );
                     }
@@ -129,7 +129,7 @@ class Orders extends Component {
         if (this.state.activeOrderList.length > 0) {
             return (<h3><span className="badge badge-warning">You have {this.state.activeOrderList.length} active order(s) </span></h3>);
         } else {
-            return (<h3><span className="badge badge-danger">There are no active orders yet!!! </span></h3>);
+            return (<h3><span className="badge badge-danger">You have no active orders</span></h3>);
         }
     }
 
@@ -142,13 +142,19 @@ class Orders extends Component {
     }
 
     renderOrders(orderList, open) {
-        return (<div className="row" style={{margin: 0}}>
-            {orderList.map(order => <Order key={order.id}
-                                           onReadMore={this.handleReadMore}
-                                           onDelete={this.handleDeleteOrder}
-                                           calculateTotal={this.calculateOrderTotal}
-                                           order={order} open={open}/>)}
-        </div>);
+        if (orderList.length > 0) {
+            return (<React.Fragment>
+                <div className="row" style={{margin: 0}}>
+                    {orderList.map(order => <Order key={order.id}
+                                                   onReadMore={this.handleReadMore}
+                                                   onDelete={this.handleDeleteOrder}
+                                                   calculateTotal={this.calculateOrderTotal}
+                                                   order={order} open={open}/>)}
+                </div>
+            </React.Fragment>);
+        } else {
+            return (<React.Fragment><h3><span className="badge badge-danger">No {open === 1 ? 'Active' : 'Closed'} Orders</span></h3></React.Fragment>);
+        }
     }
 
     calculateOrderTotal(orderProductList) {
@@ -166,6 +172,7 @@ class Orders extends Component {
             <hr/>
             <h3>Active Orders</h3>
             {this.renderOrders(this.state.activeOrderList, 1)}
+            <br/>
             <hr/>
             <h3>Closed Orders</h3>
             {this.renderOrders(this.state.closedOrderList, 0)}

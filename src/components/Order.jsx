@@ -36,9 +36,9 @@ class Order extends Component {
                         <h5 className="card-text"><i>No of Items : <b>{this.renderNumberOfItems()}</b></i></h5>
                         <h5 className="card-text"><i>Total : <b><span
                             className="badge badge-dark">Rs {this.props.calculateTotal(this.props.order.products)}</span></b></i></h5>
-                        <button type="button" className="btn btn-md btn-info"
+                        <button type="button" className="btn btn-md btn-secondary"
                                 onClick={() => this.props.onReadMore(this.props.order.id, this.props.open)}
-                                style={{margin: 5}}><b>View or Edit</b></button>
+                                style={{margin: 5}}><b>{this.props.open === 1 ? 'View & Edit' : 'View More'}</b></button>
                         <button type="button" className="btn btn-md btn-danger" onClick={() => this.props.onDelete(this.props.order.id)}
                                 style={{margin: 5}}><b>Delete Order</b></button>
                     </div>
