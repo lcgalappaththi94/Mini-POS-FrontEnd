@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
 import {Redirect} from "react-router-dom";
+import Title from './Title';
+import './Components.css';
 
 class Login extends Component {
     constructor(props) {
@@ -60,8 +62,8 @@ class Login extends Component {
         } else {
             return (
                 <React.Fragment>
-                    <div className="container">
-                        <h1 style={{color: 'red'}} className="text-center pt-5">Cake Shop POS System</h1>
+                    <div className="container component">
+                        <Title/>
                         <div id="login-row" className="row justify-content-center align-items-center">
                             <div id="login-column" className="col-md-6">
                                 <div id="login-box" className="col-md-12">

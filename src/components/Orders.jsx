@@ -3,6 +3,8 @@ import Order from './Order';
 import {confirmAlert} from 'react-confirm-alert';
 import 'react-confirm-alert/src/react-confirm-alert.css';
 import ReadMoreModel from './ReadMoreModal';
+import Title from './Title';
+import './Components.css';
 
 class Orders extends Component {
     constructor(props) {
@@ -167,18 +169,21 @@ class Orders extends Component {
 
     renderOrderList() {
         return (<React.Fragment>
-            <h1 style={{color: 'red'}} className="text-center pt-5">Cake Shop POS System</h1>
-            <h2>Current Orders of<span className="badge m-2 badge-primary">{JSON.parse(localStorage.getItem('userData')).name}</span></h2>
-            {this.numberOfOrdersRender()}
-            <button onClick={this.startNewOrder} className="btn btn-md btn-success"><b>Start New Order</b></button>
-            <hr/>
-            <h3>Active Orders</h3>
-            {this.renderOrders(this.state.activeOrderList, 1)}
-            <br/>
-            <hr/>
-            <h3>Closed Orders</h3>
-            {this.renderOrders(this.state.closedOrderList, 0)}
-            {this.getModelElement()}
+            <div className="container component">
+                <Title/>
+                <h2>Current Orders of<span className="badge m-2 badge-primary">{JSON.parse(localStorage.getItem('userData')).name}</span></h2>
+                {this.numberOfOrdersRender()}
+                <button onClick={this.startNewOrder} className="btn btn-md btn-success"><b>Start New Order</b></button>
+                <hr/>
+                <h3>Active Orders</h3>
+                {this.renderOrders(this.state.activeOrderList, 1)}
+                <br/>
+                <hr/>
+                <h3>Closed Orders</h3>
+                {this.renderOrders(this.state.closedOrderList, 0)}
+                {this.getModelElement()}
+                <hr/>
+            </div>
         </React.Fragment>);
     }
 

@@ -218,7 +218,7 @@ class ReadMoreModal extends Component {
             <React.Fragment>
                 <Modal isOpen={this.state.modalIsOpen} onAfterOpen={this.afterOpenModal} onRequestClose={this.closeModal} className="Model"
                        contentLabel="Order Details Modal">
-                    <div className="modal-dialog modal-lg">
+                    <div className="modal-dialog modal-lg" style={{marginTop: '5%'}}>
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">Order Details of Order <span className="badge badge-primary" style={{fontSize: 16}}>

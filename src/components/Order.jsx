@@ -14,7 +14,7 @@ class Order extends Component {
     render() {
         return (
             <React.Fragment>
-                <div className="card col-lg-4 col-md-4 col-sm-4 col-xs-12" style={{width: '18rem', marginTop: 10, marginRight: 10}}>
+                <div className="card col-lg-4 col-md-4 col-sm-6 col-xs-6" style={{width: '18rem', marginTop: 5, marginBottom: 5}}>
                     <div className="card-body">
                         <h5 className="card-title"><i><b>Order ID : <span className="badge badge-primary"
                                                                           style={{fontSize: 16}}>{this.props.order.id}</span>

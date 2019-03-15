@@ -6,7 +6,7 @@ class SubTotal extends Component {
             <React.Fragment>
                 <span className="badge badge-dark badge-pill" style={{fontSize: 14, width: '25%'}}>
                     <b>
-                        <span style={{color: 'yellow'}}>Rs {this.props.unitPrice} x {this.props.numItems} </span>
+                        <span style={{color: 'orange'}}>Rs {this.props.unitPrice} x {this.props.numItems} </span>
                         = Rs {this.props.numItems * this.props.unitPrice}
                     </b>
                 </span>

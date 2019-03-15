@@ -14,15 +14,11 @@ class App extends Component {
     renderSelect() {
         if (localStorage.getItem('userData')) {
             return (<React.Fragment>
-                <div className="container">
-                    <Orders/>
-                </div>
+                <Orders/>
             </React.Fragment>);
         } else {
             return (<React.Fragment>
-                <div className="container">
-                    <Login/>
-                </div>
+                <Login/>
             </React.Fragment>);
         }
     }
@@ -37,7 +33,13 @@ class App extends Component {
     }
 
     render() {
-        return (this.renderSelect());
+        return (
+            <React.Fragment>
+                <div className="container App-header">
+                    {this.renderSelect()}
+                </div>
+            </React.Fragment>
+        );
     }
 }
 

@@ -7,7 +7,7 @@ import createHistory from 'history/createBrowserHistory'
 import * as serviceWorker from './serviceWorker';
 import 'bootstrap/dist/css/bootstrap.css'
 
-const history = createHistory()
+const history = createHistory();
 
 ReactDOM.render(<Router history={history}><Routes/></Router>, document.getElementById('root'));
 
