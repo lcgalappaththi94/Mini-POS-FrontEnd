@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
-import './App.css';
-import Login from "./components/Login"
-import Orders from "./components/Orders"
+import Login from "./components/Login";
+import Orders from "./components/Orders";
+import './components/Components.css'
 
 class App extends Component {
     constructor(props) {
@@ -35,7 +35,7 @@ class App extends Component {
     render() {
         return (
             <React.Fragment>
-                <div className="container App-header">
+                <div className="container component">
                     {this.renderSelect()}
                 </div>
             </React.Fragment>

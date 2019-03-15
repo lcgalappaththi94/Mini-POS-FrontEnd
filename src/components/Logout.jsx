@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Redirect} from "react-router-dom";
 import Title from './Title';
-import '../App.css';
+import './Components.css';
 
 class Logout extends Component {
     constructor(props) {
@@ -31,7 +31,7 @@ class Logout extends Component {
         } else {
             return (
                 <React.Fragment>
-                    <div style={{marginTop: '2%'}} className="container App-header">
+                    <div style={{marginTop: '2%'}} className="container component">
                         <Title/>
                         <div id="login-row" className="row justify-content-center align-items-center">
                             <div id="login-column" className="col-md-6">
