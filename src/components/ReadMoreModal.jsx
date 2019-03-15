@@ -22,38 +22,53 @@ class ReadMoreModal extends Component {
         this.handleAddToOrder = this.handleAddToOrder.bind(this);
     }
 
+    updateQueriedProductList(productId, count) {
+        let queriedProductList = [...this.state.queriedProducts];
+        const similarProduct = queriedProductList.filter(Product => Product.id === productId)[0];
+        const index = queriedProductList.indexOf(similarProduct);
+        queriedProductList[index] = {...similarProduct};
+        queriedProductList[index].availability += count;
+        return queriedProductList;
+    }
+
     handleAddToOrder(product) {
         console.log("add order item", product.id);
         let orderList = [...this.state.orderItems];
-        const similarOrderItem = orderList.filter(orderItem => orderItem.id === product.id);
-        if (similarOrderItem.length === 0) {
-            let newOrderItem = {
-                "id": product.id,
-                "name": product.name,
-                "unitPrice": product.unitPrice,
-                "availability": product.availability - 1,
-                "order_product": {
-                    "numItems": 1,
-                    "productId": product.id,
-                    "orderId": this.state.orderId
-                }
-            };
-            let payload = {availability: product.availability - 1};
-            fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + product.id, {
-                method: 'POST', headers: {
-                    'Content-Type': ' application/json'
-                }, body: JSON.stringify(payload)
-            }).then(res => res.json())
-                .then((result) => {
-                        if (result.orderId) {
-                            orderList.push(newOrderItem);
-                            this.setState({orderItems: orderList});
-                        }
-                    }, (error) => {
-                        console.log("Error occurred while adding product to order", error);
-                        alert("Error occurred while adding product to order");
+        const similarOrderItems = orderList.filter(orderItem => orderItem.id === product.id);
+        if (similarOrderItems.length === 0) {
+            let itemCount = prompt("Please enter the required quantity of " + product.name, "1");
+            let count = parseInt(itemCount);
+            if (itemCount != null && count > 0) {
+                let newOrderItem = {
+                    "id": product.id,
+                    "name": product.name,
+                    "unitPrice": product.unitPrice,
+                    "availability": product.availability - count,
+                    "order_product": {
+                        "numItems": count,
+                        "productId": product.id,
+                        "orderId": this.state.orderId
                     }
-                );
+                };
+                let payload = {availability: product.availability - count, numItems: count};
+                fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + product.id, {
+                    method: 'POST', headers: {
+                        'Content-Type': ' application/json'
+                    }, body: JSON.stringify(payload)
+                }).then(res => res.json())
+                    .then((result) => {
+                            if (result.orderId) {
+                                orderList.push(newOrderItem);
+                                this.setState({orderItems: orderList, queriedProducts: this.updateQueriedProductList(product.id, -count)});
+                            }
+                        }, (error) => {
+                            console.log("Error occurred while adding product to order", error);
+                            alert("Error occurred while adding product to order");
+                        }
+                    );
+            } else {
+                console.log("canceled adding product");
+            }
         } else {
             alert(product.name + " is already added to Order\n You can increase or decrease the quantity");
         }
@@ -70,7 +85,7 @@ class ReadMoreModal extends Component {
             .then((result) => {
                     if (result.productId) {
                         const orderItems = this.state.orderItems.filter(orderItem => orderItem.id !== productId);
-                        this.setState({orderItems: orderItems});
+                        this.setState({orderItems: orderItems, queriedProducts: this.updateQueriedProductList(productId, currentAmount)});
                     }
                 }, (error) => {
                     console.log("Error occurred while removing product from order", error);
@@ -95,7 +110,7 @@ class ReadMoreModal extends Component {
                             orderList[index] = {...orderItem};
                             orderList[index].order_product.numItems++;
                             orderList[index].availability--;
-                            this.setState({orderItems: orderList});
+                            this.setState({orderItems: orderList, queriedProducts: this.updateQueriedProductList(productId, -1)});
                         }
                     }, (error) => {
                         console.log("Error occurred while incrementing product", error);
@@ -126,7 +141,7 @@ class ReadMoreModal extends Component {
                             orderList[index] = {...orderItem};
                             orderList[index].order_product.numItems--;
                             orderList[index].availability++;
-                            this.setState({orderItems: orderList});
+                            this.setState({orderItems: orderList, queriedProducts: this.updateQueriedProductList(productId, 1)});
                         }
                     }, (error) => {
                         console.log("Error occurred while decreasing product", error);
