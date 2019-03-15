@@ -106,6 +106,8 @@ class ReadMoreModal extends Component {
                     }
                 );
             console.log("increase order item", productId);
+        } else {
+            alert("This is the maximum quantity for this item");
         }
     }
 
@@ -135,6 +137,8 @@ class ReadMoreModal extends Component {
                     }
                 );
             console.log("decrease order item", productId);
+        } else {
+            alert("Minimum item quantity is 1.\nIf you want to delete item use button(x)");
         }
     }
 

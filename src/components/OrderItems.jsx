@@ -23,6 +23,7 @@ class OrderItems extends Component {
         return (
             <React.Fragment>
                 <h3>Current Order <span className="badge badge-warning"> {this.props.orderItems.length} Item(s)</span></h3>
+                <hr/>
                 <ul className="list-group">
                     {this.renderOrderItemList()}
                 </ul>
