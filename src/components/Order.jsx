@@ -11,18 +11,6 @@ class Order extends Component {
         }
     }
 
-    renderNumberOfItems() {
-        if (this.props.order.products.length > 0) {
-            return (<React.Fragment>
-                <span className="badge badge-warning">{this.props.order.products.length} Item(s)</span>
-            </React.Fragment>);
-        } else {
-            return (<React.Fragment>
-                <span className="badge badge-danger">No Items</span>
-            </React.Fragment>)
-        }
-    }
-
     render() {
         return (
             <React.Fragment>
@@ -33,7 +21,8 @@ class Order extends Component {
                             {this.renderOpenClose(this.props.open)}
                         </b></i>
                         </h5>
-                        <h5 className="card-text"><i>No of Items : <b>{this.renderNumberOfItems()}</b></i></h5>
+                        <h5 className="card-text"><i>No of Items : <b> <span
+                            className="badge badge-warning">{this.props.order.products.length} Item(s)</span></b></i></h5>
                         <h5 className="card-text"><i>Total : <b><span
                             className="badge badge-dark">Rs {this.props.calculateTotal(this.props.order.products)}</span></b></i></h5>
                         <button type="button" className="btn btn-md btn-secondary"

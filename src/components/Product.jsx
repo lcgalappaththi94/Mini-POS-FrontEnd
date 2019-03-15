@@ -1,4 +1,5 @@
 import React, {Component} from 'react';
+import ItemAvailability from './ItemAvailability';
 
 class Product extends Component {
     constructor(props) {
@@ -13,8 +14,7 @@ class Product extends Component {
         if (this.state.product.availability > 0) {
             return (<React.Fragment>
                 <span className="badge badge-dark badge-pill" style={{fontSize: 14, width: '20%'}}><b>Rs {this.state.product.unitPrice}</b></span>
-                <span className="badge badge-success badge-pill"
-                      style={{fontSize: 14, width: '25%'}}><b>Available ({this.state.product.availability})</b></span>
+                <ItemAvailability available={this.state.product.availability}/>
                 <input type="button" className="btn btn-sm btn-secondary" onClick={() => this.props.onAdd(this.state.product)} value="Add To Order"/>
             </React.Fragment>);
         } else {
@@ -30,7 +30,7 @@ class Product extends Component {
         return (
             <React.Fragment>
                 <li className="list-group-item d-flex justify-content-between align-items-center">
-                    <span style={{width: '25%'}}>{this.state.product.name}</span>
+                    <span style={{width: '25%'}}><b>{this.state.product.name}</b></span>
                     {this.renderAvailability()}
                 </li>
             </React.Fragment>

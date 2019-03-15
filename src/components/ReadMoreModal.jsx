@@ -3,9 +3,6 @@ import Products from './Products';
 import OrderItems from './OrderItems';
 import Modal from 'react-modal';
 
-const customStyles = {
-    width: 100
-};
 Modal.setAppElement('#root');
 
 class ReadMoreModal extends Component {
@@ -58,7 +55,7 @@ class ReadMoreModal extends Component {
                     }
                 );
         } else {
-            alert(product.name + " is already added to Order");
+            alert(product.name + " is already added to Order\n You can increase or decrease the quantity");
         }
     }
 
@@ -204,9 +201,9 @@ class ReadMoreModal extends Component {
     render() {
         return (
             <React.Fragment>
-                <Modal style={customStyles} isOpen={this.state.modalIsOpen} onAfterOpen={this.afterOpenModal} onRequestClose={this.closeModal} className="Model"
+                <Modal isOpen={this.state.modalIsOpen} onAfterOpen={this.afterOpenModal} onRequestClose={this.closeModal} className="Model"
                        contentLabel="Order Details Modal">
-                    <div className="modal-dialog" role="document">
+                    <div className="modal-dialog modal-lg">
                         <div className="modal-content">
                             <div className="modal-header">
                                 <h5 className="modal-title">Order Details of Order <span className="badge badge-primary" style={{fontSize: 16}}>
@@ -221,8 +218,8 @@ class ReadMoreModal extends Component {
                                             onDelete={this.handleRemoveItem}
                                             onIncrease={this.handleIncreaseItemCount}
                                             onDecrease={this.handleDecreaseItemCount} open={this.props.open}/>
-                                <h3 style={{marginTop: 10}}><b><i>Total: <span
-                                    className="badge badge-dark"> Rs {this.props.calculateTotal(this.state.orderItems)}</span></i></b>
+                                <h3 style={{marginTop: 10}}>
+                                    <b><i>Total: <span className="badge badge-dark"> Rs {this.props.calculateTotal(this.state.orderItems)}</span></i></b>
                                 </h3>
                             </div>
                             <div className="modal-footer">

@@ -60,7 +60,7 @@ class SignUp extends Component {
         } else {
             return (
                 <React.Fragment>
-                    <div style={{background: "#d2e7ea"}} className="container">
+                    <div className="container">
                         <h1 style={{color: 'red'}} className="text-center pt-5">Cake Shop POS System</h1>
                         <div id="login-row" className="row justify-content-center align-items-center">
                             <div id="login-column" className="col-md-6">
@@ -86,7 +86,7 @@ class SignUp extends Component {
                                             <input type="submit" style={{marginRight: 20}} onClick={this.signUp} className="btn btn-primary btn-lg"
                                                    value="Sign Up Here"/>
                                             <input type="button" style={{marginRight: 20}} onClick={this.backToLogin} className="btn btn-success btn-lg"
-                                                   value="<= Back To Login"/>
+                                                   value="Back To Login"/>
                                         </div>
                                     </form>
                                 </div>

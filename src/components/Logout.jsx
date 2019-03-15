@@ -29,7 +29,7 @@ class Logout extends Component {
         } else {
             return (
                 <React.Fragment>
-                    <div style={{background: "#d2e7ea"}} className="container">
+                    <div className="container">
                         <h1 style={{color: 'red'}} className="text-center pt-5">Cake Shop POS System</h1>
                         <div id="login-row" className="row justify-content-center align-items-center">
                             <div id="login-column" className="col-md-6">
@@ -37,7 +37,7 @@ class Logout extends Component {
                                     <div className="form-group">
                                         <h3 className="text-center form-group">Do you really want to logout <span
                                             style={{color: 'blue'}}><br/>{this.state.name}</span> ?</h3>
-                                        <input type="button" style={{marginLeft: 150}} onClick={this.logout} className="btn btn-danger btn-lg"
+                                        <input type="button" style={{marginLeft: 160}} onClick={this.logout} className="btn btn-danger btn-lg"
                                                value="Yes"/>
                                         <input type="button" style={{margin: 10}} onClick={this.cancelLogout} className="btn btn-success btn-lg"
                                                value="No"/>

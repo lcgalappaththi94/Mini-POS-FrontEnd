@@ -15,9 +15,6 @@ class App extends Component {
         if (localStorage.getItem('userData')) {
             return (<React.Fragment>
                 <div className="container">
-                    <h2>Current Orders of
-                        <span className="badge m-2 badge-primary">{JSON.parse(localStorage.getItem('userData')).name}</span>
-                    </h2>
                     <Orders/>
                 </div>
             </React.Fragment>);

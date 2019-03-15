@@ -167,6 +167,8 @@ class Orders extends Component {
 
     renderOrderList() {
         return (<React.Fragment>
+            <h1 style={{color: 'red'}} className="text-center pt-5">Cake Shop POS System</h1>
+            <h2>Current Orders of<span className="badge m-2 badge-primary">{JSON.parse(localStorage.getItem('userData')).name}</span></h2>
             {this.numberOfOrdersRender()}
             <button onClick={this.startNewOrder} className="btn btn-md btn-success"><b>Start New Order</b></button>
             <hr/>
