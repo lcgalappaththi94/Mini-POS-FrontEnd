@@ -5,7 +5,7 @@ class NavBar extends Component {
         if (localStorage.getItem('userData')) {
             return (<React.Fragment>
                 <nav className="navbar navbar-dark bg-dark sticky-top">
-                    <a className="navbar-brand" href="/" style={{color: '#FF7433'}}>Cake Shop</a>
+                    <a className="navbar-brand" href="/" style={{color: '#FF7433'}}><b>Cake Shop</b></a>
                     <span className="navbar-brand mb-0 h1" style={{color: '#FF7433'}}>
                         <b>Hi, {JSON.parse(localStorage.getItem('userData')).name}</b>
                     </span>

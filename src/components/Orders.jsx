@@ -182,7 +182,7 @@ class Orders extends Component {
                 <h3>Closed Orders</h3>
                 {this.renderOrders(this.state.closedOrderList, 0)}
                 {this.getModelElement()}
-                <hr/>
+                <br/>
             </div>
         </React.Fragment>);
     }
