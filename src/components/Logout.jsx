@@ -39,10 +39,8 @@ class Logout extends Component {
                                     <div className="form-group">
                                         <h3 className="text-center form-group">Do you really want to logout <span
                                             style={{color: 'blue'}}><br/>{this.state.name}</span> ?</h3>
-                                        <input type="button" style={{marginLeft: 160}} onClick={this.logout} className="btn btn-danger btn-lg"
-                                               value="Yes"/>
-                                        <input type="button" style={{margin: 10}} onClick={this.cancelLogout} className="btn btn-success btn-lg"
-                                               value="No"/>
+                                        <input type="button" style={{marginLeft: '35%'}} onClick={this.logout} className="btn btn-danger btn-lg" value="Yes"/>
+                                        <input type="button" style={{margin: 10}} onClick={this.cancelLogout} className="btn btn-success btn-lg" value="No"/>
                                     </div>
                                 </div>
                             </div>

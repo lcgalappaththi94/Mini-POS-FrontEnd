@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import {Redirect} from "react-router-dom";
 import Title from './Title';
 import './Components.css';
+import ReactNotification from "react-notifications-component";
+import "react-notifications-component/dist/theme.css";
 
 class SignUp extends Component {
     constructor(props) {
@@ -15,6 +17,23 @@ class SignUp extends Component {
         this.signUp = this.signUp.bind(this);
         this.backToLogin = this.backToLogin.bind(this);
         this.onChangeUpdateState = this.onChangeUpdateState.bind(this);
+        this.addNotification = this.addNotification.bind(this);
+        this.notificationDOMRef = React.createRef();
+    }
+
+    addNotification(notificationType, title, message) {
+        let notification = {
+            title: title,
+            message: message,
+            type: notificationType,
+            insert: "top",
+            container: "top-left",
+            animationIn: ["animated", "fadeIn"],
+            animationOut: ["animated", "fadeOut"],
+            dismiss: {duration: 2000},
+            dismissable: {click: true}
+        };
+        this.notificationDOMRef.current.addNotification(notification);
     }
 
     backToLogin() {
@@ -37,11 +56,11 @@ class SignUp extends Component {
                             this.setState({redirect: '/login'});
                         } else {
                             console.log("Sign Up Failed!!!");
-                            alert("Sign Up Failed!!!");
+                            this.addNotification('danger', 'Error Occurred', 'Sign Up Failed');
                         }
                     }, (error) => {
                         this.setState({redirect: '/signUp', error});
-                        alert("Sign Up Failed!!!");
+                        this.addNotification('danger', 'Error Occurred', 'Sign Up Failed');
                     }
                 )
         }
@@ -63,6 +82,7 @@ class SignUp extends Component {
             return (
                 <React.Fragment>
                     <div className="container component">
+                        <ReactNotification ref={this.notificationDOMRef}/>
                         <Title/>
                         <div id="login-row" className="row justify-content-center align-items-center">
                             <div id="login-column" className="col-md-6">

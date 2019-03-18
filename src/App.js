@@ -23,7 +23,6 @@ class App extends Component {
         }
     }
 
-
     componentWillMount() {
         if (localStorage.getItem('userData')) {
             this.setState({validCookie: true});

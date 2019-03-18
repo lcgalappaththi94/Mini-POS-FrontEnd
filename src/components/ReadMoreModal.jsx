@@ -2,6 +2,9 @@ import React, {Component} from 'react';
 import Products from './Products';
 import OrderItems from './OrderItems';
 import Modal from 'react-modal';
+import ReactNotification from "react-notifications-component";
+import "react-notifications-component/dist/theme.css";
+
 
 Modal.setAppElement('#root');
 
@@ -20,6 +23,23 @@ class ReadMoreModal extends Component {
         this.handleIncreaseItemCount = this.handleIncreaseItemCount.bind(this);
         this.handleDecreaseItemCount = this.handleDecreaseItemCount.bind(this);
         this.handleAddToOrder = this.handleAddToOrder.bind(this);
+        this.addNotification = this.addNotification.bind(this);
+        this.notificationDOMRef = React.createRef();
+    }
+
+    addNotification(notificationType, title, message) {
+        let notification = {
+            title: title,
+            message: message,
+            type: notificationType,
+            insert: "top",
+            container: "top-left",
+            animationIn: ["animated", "fadeIn"],
+            animationOut: ["animated", "fadeOut"],
+            dismiss: {duration: 2000},
+            dismissable: {click: true}
+        };
+        this.notificationDOMRef.current.addNotification(notification);
     }
 
     updateQueriedProductList(productId, count) {
@@ -63,14 +83,14 @@ class ReadMoreModal extends Component {
                             }
                         }, (error) => {
                             console.log("Error occurred while adding product to order", error);
-                            alert("Error occurred while adding product to order");
+                            this.addNotification('danger', 'Error Occurred', 'Error occurred while adding product to order');
                         }
                     );
             } else {
                 console.log("canceled adding product");
             }
         } else {
-            alert(product.name + " is already added to Order\n You can increase or decrease the quantity");
+            this.addNotification('warning', 'Warning', product.name + " is already added to Order\n You can increase or decrease the quantity");
         }
     }
 
@@ -89,7 +109,7 @@ class ReadMoreModal extends Component {
                     }
                 }, (error) => {
                     console.log("Error occurred while removing product from order", error);
-                    alert("Error occurred while removing product from order");
+                    this.addNotification('danger', 'Error Occurred', 'Error occurred while removing product from order');
                 }
             );
     }
@@ -114,12 +134,12 @@ class ReadMoreModal extends Component {
                         }
                     }, (error) => {
                         console.log("Error occurred while incrementing product", error);
-                        alert("Error occurred while incrementing product");
+                        this.addNotification('danger', 'Error Occurred', 'Error occurred while incrementing product');
                     }
                 );
             console.log("increase order item", productId);
         } else {
-            alert("This is the maximum quantity for this item");
+            this.addNotification('warning', 'Warning', "This is the maximum quantity for this item");
         }
     }
 
@@ -145,12 +165,12 @@ class ReadMoreModal extends Component {
                         }
                     }, (error) => {
                         console.log("Error occurred while decreasing product", error);
-                        alert("Error occurred while decreasing product");
+                        this.addNotification('danger', 'Error Occurred', 'Error occurred while decreasing product');
                     }
                 );
             console.log("decrease order item", productId);
         } else {
-            alert("Minimum item quantity is 1.\nIf you want to delete item use button(x)");
+            this.addNotification('warning', 'Warning', "Minimum item quantity is 1.\nIf you want to delete item use button(x)");
         }
     }
 
@@ -161,7 +181,7 @@ class ReadMoreModal extends Component {
                     this.setState({modalIsOpen: true, orderItems: result.products});
                 }, (error) => {
                     console.log("Error occurred while fetching order details", error);
-                    alert("Error occurred while fetching order details");
+                    this.addNotification('danger', 'Error Occurred', 'Error occurred while fetching order details');
                 }
             );
     }
@@ -174,7 +194,7 @@ class ReadMoreModal extends Component {
                         this.setState({queriedProducts: result});
                     }, (error) => {
                         console.log("Error occurred while querying products", error);
-                        alert("Error occurred while querying products");
+                        this.addNotification('danger', 'Error Occurred', 'Error occurred while querying products');
                     }
                 );
         } else {
@@ -183,15 +203,14 @@ class ReadMoreModal extends Component {
     }
 
     afterOpenModal() {
-        // references are now sync'd and can be accessed.
-        // this.subtitle.style.color = '#f00';
+        document.body.style.overflow = 'hidden';
     }
 
     renderAddNewProducts(open) {
         if (open) {
             return (<React.Fragment><h3>Add Products To Order</h3>
                 <input type="text" className="form-control" name="query" onKeyUp={this.onChangeUpdateState} placeholder="Search products Here"
-                       autoComplete="off"/>
+                       autoComplete="off" autoFocus/>
                 <Products products={this.state.queriedProducts} onAdd={this.handleAddToOrder}/>
                 <br/>
                 <hr/>
@@ -216,8 +235,8 @@ class ReadMoreModal extends Component {
     render() {
         return (
             <React.Fragment>
-                <Modal isOpen={this.state.modalIsOpen} onAfterOpen={this.afterOpenModal} onRequestClose={this.closeModal} className="Model"
-                       contentLabel="Order Details Modal">
+                <ReactNotification ref={this.notificationDOMRef}/>
+                <Modal isOpen={this.state.modalIsOpen} onAfterOpen={this.afterOpenModal} className="Model" contentLabel="Order Details Modal">
                     <div className="modal-dialog modal-lg" style={{marginTop: '5%'}}>
                         <div className="modal-content">
                             <div className="modal-header">
@@ -227,7 +246,7 @@ class ReadMoreModal extends Component {
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <div className="modal-body">
+                            <div className="modal-body" style={{height: window.innerHeight - 250 + 'px', overflowY: 'scroll', position: 'relative'}}>
                                 {this.renderAddNewProducts(this.props.open)}
                                 <OrderItems orderItems={this.state.orderItems}
                                             onDelete={this.handleRemoveItem}

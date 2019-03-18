@@ -2,6 +2,8 @@ import React, {Component} from 'react';
 import {Redirect} from "react-router-dom";
 import Title from './Title';
 import './Components.css';
+import ReactNotification from "react-notifications-component";
+import "react-notifications-component/dist/theme.css";
 
 class Login extends Component {
     constructor(props) {
@@ -9,11 +11,31 @@ class Login extends Component {
         this.state = {
             username: '',
             password: '',
-            redirect: ''
+            redirect: '',
+            notificationType: '',
+            notificationTitle: '',
+            notificationMessage: ''
         };
         this.login = this.login.bind(this);
         this.onChangeUpdateState = this.onChangeUpdateState.bind(this);
         this.showNewUserInterface = this.showNewUserInterface.bind(this);
+        this.addNotification = this.addNotification.bind(this);
+        this.notificationDOMRef = React.createRef();
+    }
+
+    addNotification(notificationType, title, message) {
+        let notification = {
+            title: title,
+            message: message,
+            type: notificationType,
+            insert: "top",
+            container: "top-left",
+            animationIn: ["animated", "fadeIn"],
+            animationOut: ["animated", "fadeOut"],
+            dismiss: {duration: 2000},
+            dismissable: {click: true}
+        };
+        this.notificationDOMRef.current.addNotification(notification);
     }
 
     showNewUserInterface() {
@@ -32,16 +54,17 @@ class Login extends Component {
                 .then(res => res.json())
                 .then((result) => {
                         if (result.id) {
-                            console.log('logged in');
+                            console.log('Login success');
+                            this.addNotification('success', 'Login Successful', 'Welcome to the CakeShop');
                             localStorage.setItem('userData', JSON.stringify(result));
                             this.setState({redirect: '/'});
                         } else {
                             console.log("Login Failed!!!");
-                            alert("Login Failed!!!");
+                            this.addNotification('danger', 'Wrong Credentials', 'Login Failed');
                         }
                     }, (error) => {
                         this.setState({redirect: '/login', error});
-                        alert("Login Failed!!!");
+                    this.addNotification('danger', 'Wrong Credentials', 'Login Failed');
                     }
                 )
         }
@@ -58,11 +81,14 @@ class Login extends Component {
 
     render() {
         if (this.state.redirect !== '') {
-            return (<Redirect to={this.state.redirect}/>);
+            return (<React.Fragment>
+                <Redirect to={this.state.redirect}/>
+            </React.Fragment>);
         } else {
             return (
                 <React.Fragment>
                     <div className="container component">
+                        <ReactNotification ref={this.notificationDOMRef}/>
                         <Title/>
                         <div id="login-row" className="row justify-content-center align-items-center">
                             <div id="login-column" className="col-md-6">

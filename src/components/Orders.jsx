@@ -5,6 +5,8 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 import ReadMoreModel from './ReadMoreModal';
 import Title from './Title';
 import './Components.css';
+import ReactNotification from "react-notifications-component";
+import "react-notifications-component/dist/theme.css";
 
 class Orders extends Component {
     constructor(props) {
@@ -22,9 +24,27 @@ class Orders extends Component {
         this.handleCloseModal = this.handleCloseModal.bind(this);
         this.handleCloseOrder = this.handleCloseOrder.bind(this);
         this.handleReadMore = this.handleReadMore.bind(this);
+        this.addNotification = this.addNotification.bind(this);
+        this.notificationDOMRef = React.createRef();
+    }
+
+    addNotification(notificationType, title, message) {
+        let notification = {
+            title: title,
+            message: message,
+            type: notificationType,
+            insert: "top",
+            container: "top-left",
+            animationIn: ["animated", "fadeIn"],
+            animationOut: ["animated", "fadeOut"],
+            dismiss: {duration: 2000},
+            dismissable: {click: true}
+        };
+        this.notificationDOMRef.current.addNotification(notification);
     }
 
     handleCloseModal() {
+        // document.body.removeAttribute('style');
         console.log("handle close model");
         fetch("http://localhost:8081/user/" + JSON.parse(localStorage.getItem('userData')).id + "/orders", {method: 'GET'})
             .then(res => res.json())
@@ -34,7 +54,7 @@ class Orders extends Component {
                     this.setState({modalIsOpen: false, activeOrderList: activeOrders, closedOrderList: closedOrders});
                 }, (error) => {
                     console.log("error occurred while fetching orders", error);
-                    alert("Error occurred while fetching orders");
+                    this.addNotification('danger', 'Error Occurred', 'Error occurred while fetching orders');
                 }
             );
     }
@@ -42,20 +62,37 @@ class Orders extends Component {
     handleCloseOrder(orderId) {
         console.log("close order", orderId);
         let payload = {open: 0};
-        fetch("http://localhost:8081/orders/" + orderId,
-            {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': ' application/json'
-                }, body: JSON.stringify(payload)
-            }).then(res => res.json())
-            .then((result) => {
-                    this.handleCloseModal();
-                }, (error) => {
-                    console.log("error occurred while updating orders", error);
-                    alert("Error occurred while closing order " + orderId);
+
+        confirmAlert({
+            title: 'Confirm Finish Order',
+            message: `Are you sure want to finish order #${orderId}?`,
+            buttons: [
+                {
+                    label: 'Yes',
+                    onClick: () => {
+                        fetch("http://localhost:8081/orders/" + orderId,
+                            {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': ' application/json'
+                                }, body: JSON.stringify(payload)
+                            }).then(res => res.json())
+                            .then((result) => {
+                                    this.handleCloseModal();
+                                }, (error) => {
+                                    console.log("error occurred while updating orders", error);
+                                    this.addNotification('danger', 'Error Occurred', 'Error occurred while closing order ' + orderId);
+                                }
+                            );
+                    }
+                },
+                {
+                    label: 'No',
+                    onClick: () => console.log('Order finish canceled')
                 }
-            );
+            ]
+        });
+
     }
 
 
@@ -63,7 +100,7 @@ class Orders extends Component {
         console.log("delete order called", orderId);
         confirmAlert({
             title: 'Confirm Delete',
-            message: 'Are you sure to delete order #' + orderId,
+            message: `Are you sure want to delete order #${orderId}?`,
             buttons: [
                 {
                     label: 'Yes',
@@ -74,11 +111,12 @@ class Orders extends Component {
                                     if (result.id) {
                                         const activeOrderList = this.state.activeOrderList.filter(order => order.id !== orderId);
                                         const closedOrderList = this.state.closedOrderList.filter(order => order.id !== orderId);
+                                        this.addNotification('success', 'Order Deleted', 'Order ' + orderId + ' Successfully Deleted');
                                         this.setState({modalIsOpen: false, activeOrderList: activeOrderList, closedOrderList: closedOrderList});
                                     }
                                 }, (error) => {
                                     console.log("error occurred while deleting order", error);
-                                    alert("Error occurred while deleting order " + orderId);
+                                    this.addNotification('danger', 'Error Occurred', 'Order ' + orderId + ' Delete Failed');
                                 }
                             );
                     }
@@ -103,16 +141,18 @@ class Orders extends Component {
             .then(res => res.json())
             .then((result) => {
                     if (result.id) {
+                        this.addNotification('success', 'New Order Created', 'Order ' + result.id + ' Successfully Created');
                         this.setState({modalIsOpen: true, orderIsOpen: 1, modelOrderId: result.id});
                     }
                 }, (error) => {
                     console.log("error occurred while inserting new order", error);
-                    alert("Error occurred while inserting new order");
+                    this.addNotification('danger', 'Error Occurred', 'Error occurred while inserting new order');
                 }
             );
     }
 
     componentWillMount() {
+        document.body.style.overflow = 'hidden';
         fetch("http://localhost:8081/user/" + JSON.parse(localStorage.getItem('userData')).id + "/orders", {method: 'GET'})
             .then(res => res.json())
             .then((result) => {
@@ -121,7 +161,7 @@ class Orders extends Component {
                     this.setState({activeOrderList: activeOrders, closedOrderList: closedOrders});
                 }, (error) => {
                     console.log("error occurred while fetching orders", error);
-                    alert("Error occurred while fetching orders");
+                    this.addNotification('danger', 'Error Occurred', 'Error occurred while fetching orders');
                 }
             );
     }
@@ -170,17 +210,20 @@ class Orders extends Component {
     renderOrderList() {
         return (<React.Fragment>
             <div className="container component">
+                <ReactNotification ref={this.notificationDOMRef}/>
                 <Title/>
                 <h2>Current Orders of<span className="badge m-2 badge-primary">{JSON.parse(localStorage.getItem('userData')).name}</span></h2>
                 {this.numberOfOrdersRender()}
                 <button onClick={this.startNewOrder} className="btn btn-md btn-success"><b>Start New Order</b></button>
                 <hr/>
-                <h3>Active Orders</h3>
-                {this.renderOrders(this.state.activeOrderList, 1)}
-                <br/>
-                <hr/>
-                <h3>Closed Orders</h3>
-                {this.renderOrders(this.state.closedOrderList, 0)}
+                <div style={{height: window.innerHeight - 400 + 'px', overflowY: 'scroll', position: 'relative'}}>
+                    <h3>Active Orders</h3>
+                    {this.renderOrders(this.state.activeOrderList, 1)}
+                    <br/>
+                    <hr/>
+                    <h3>Closed Orders</h3>
+                    {this.renderOrders(this.state.closedOrderList, 0)}
+                </div>
                 {this.getModelElement()}
                 <br/>
             </div>
