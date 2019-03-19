@@ -64,7 +64,7 @@ class Orders extends Component {
         let payload = {open: 0};
 
         confirmAlert({
-            title: 'Confirm Finish Order',
+            title: 'Confirm Finish',
             message: `Are you sure want to finish order #${orderId}?`,
             buttons: [
                 {
