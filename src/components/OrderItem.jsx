@@ -44,13 +44,14 @@ class OrderItem extends Component {
             return (
                 <React.Fragment>
                     <li className="list-group-item d-flex justify-content-between align-items-center">
-                        <span style={{width: '20%'}}><b>{this.props.orderItem.name}</b></span>
-                        <div style={{color: 'red', width: '80%'}}>
+                        <span style={{width: '25%'}}><b>{this.props.orderItem.name}</b></span>
+                        <div style={{color: 'red', width: '75%'}}>
                             <b>Do you want to delete this item? </b>
                             <input style={{marginLeft: 10, marginRight: 10}} type="button" className="btn btn-sm btn-danger"
                                    onClick={() => this.props.onDelete(this.props.orderItem.id, this.props.orderItem.order_product.numItems, this.props.orderItem.availability)}
                                    value="Yes"/>
-                            <input style={{marginLeft: 10, marginRight: 10}} type="button" className="btn btn-sm btn-success" onClick={this.cancelConfirmDelete} value="No"/>
+                            <input style={{marginLeft: 10, marginRight: 10}} type="button" className="btn btn-sm btn-success" onClick={this.cancelConfirmDelete}
+                                   value="No"/>
                         </div>
                     </li>
                 </React.Fragment>
