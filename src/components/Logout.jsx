@@ -12,6 +12,7 @@ class Logout extends Component {
         };
         this.logout = this.logout.bind(this);
         this.cancelLogout = this.cancelLogout.bind(this);
+        document.body.style.overflow = 'hidden';
     }
 
     logout() {

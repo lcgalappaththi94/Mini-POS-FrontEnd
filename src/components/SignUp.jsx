@@ -19,6 +19,7 @@ class SignUp extends Component {
         this.onChangeUpdateState = this.onChangeUpdateState.bind(this);
         this.addNotification = this.addNotification.bind(this);
         this.notificationDOMRef = React.createRef();
+        document.body.style.overflow = 'hidden';
     }
 
     addNotification(notificationType, title, message) {

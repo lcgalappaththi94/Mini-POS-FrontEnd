@@ -56,36 +56,40 @@ class ReadMoreModal extends Component {
         let orderList = [...this.state.orderItems];
         const similarOrderItems = orderList.filter(orderItem => orderItem.id === product.id);
         if (similarOrderItems.length === 0) {
-            let itemCount = prompt("Please enter the required quantity of " + product.name, "1");
+            let itemCount = prompt("Please enter the required quantity of " + product.name + " (1-" + product.availability + ")", "1");
             let count = parseInt(itemCount);
-            if (itemCount != null && count > 0) {
-                let newOrderItem = {
-                    "id": product.id,
-                    "name": product.name,
-                    "unitPrice": product.unitPrice,
-                    "availability": product.availability - count,
-                    "order_product": {
-                        "numItems": count,
-                        "productId": product.id,
-                        "orderId": this.state.orderId
-                    }
-                };
-                let payload = {availability: product.availability - count, numItems: count};
-                fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + product.id, {
-                    method: 'POST', headers: {
-                        'Content-Type': ' application/json'
-                    }, body: JSON.stringify(payload)
-                }).then(res => res.json())
-                    .then((result) => {
-                            if (result.orderId) {
-                                orderList.push(newOrderItem);
-                                this.setState({orderItems: orderList, queriedProducts: this.updateQueriedProductList(product.id, -count)});
-                            }
-                        }, (error) => {
-                            console.log("Error occurred while adding product to order", error);
-                            this.addNotification('danger', 'Error Occurred', 'Error occurred while adding product to order');
+            if (itemCount != null) {
+                if (count > 0 && count <= product.availability) {
+                    let newOrderItem = {
+                        "id": product.id,
+                        "name": product.name,
+                        "unitPrice": product.unitPrice,
+                        "availability": product.availability - count,
+                        "order_product": {
+                            "numItems": count,
+                            "productId": product.id,
+                            "orderId": this.state.orderId
                         }
-                    );
+                    };
+                    let payload = {availability: product.availability - count, numItems: count};
+                    fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + product.id, {
+                        method: 'POST', headers: {
+                            'Content-Type': ' application/json'
+                        }, body: JSON.stringify(payload)
+                    }).then(res => res.json())
+                        .then((result) => {
+                                if (result.orderId) {
+                                    orderList.push(newOrderItem);
+                                    this.setState({orderItems: orderList, queriedProducts: this.updateQueriedProductList(product.id, -count)});
+                                }
+                            }, (error) => {
+                                console.log("Error occurred while adding product to order", error);
+                                this.addNotification('danger', 'Error Occurred', 'Error occurred while adding product to order');
+                            }
+                        );
+                } else {
+                    this.addNotification('warning', 'Warning', "Item count for " + product.name + " should be between 1 and " + product.availability);
+                }
             } else {
                 console.log("canceled adding product");
             }

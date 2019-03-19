@@ -21,6 +21,7 @@ class Login extends Component {
         this.showNewUserInterface = this.showNewUserInterface.bind(this);
         this.addNotification = this.addNotification.bind(this);
         this.notificationDOMRef = React.createRef();
+        document.body.style.overflow = 'hidden';
     }
 
     addNotification(notificationType, title, message) {

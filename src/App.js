@@ -9,6 +9,7 @@ class App extends Component {
         this.state = {
             validCookie: false
         };
+        document.body.style.overflow = 'hidden';
     }
 
     renderSelect() {

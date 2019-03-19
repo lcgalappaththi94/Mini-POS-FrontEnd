@@ -44,7 +44,6 @@ class Orders extends Component {
     }
 
     handleCloseModal() {
-        // document.body.removeAttribute('style');
         console.log("handle close model");
         fetch("http://localhost:8081/user/" + JSON.parse(localStorage.getItem('userData')).id + "/orders", {method: 'GET'})
             .then(res => res.json())
