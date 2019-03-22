@@ -1,5 +1,5 @@
-const ip = 'localhost';
-const baseURL = `http://${ip}:8081`;
+const ip = 'https://mini-pos-backend.herokuapp.com';
+const baseURL = `http://${ip}`;
 const NetworkCall = (url, method, headers, body) => {
     let init = {method: method};
     if (headers) {
