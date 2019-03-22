@@ -1,4 +1,4 @@
-const ip = '10.1.14.163';
+const ip = 'localhost';
 const baseURL = `http://${ip}:8081`;
 const NetworkCall = (url, method, headers, body) => {
     let init = {method: method};
