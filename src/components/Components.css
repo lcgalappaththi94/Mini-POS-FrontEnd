@@ -2,3 +2,8 @@
     background-color: rgb(253, 253, 255);
     margin-top: 2%;
 }
+
+.react-switch {
+    vertical-align: middle;
+    margin-left: 4px;
+}

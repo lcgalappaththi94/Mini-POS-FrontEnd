@@ -15,7 +15,7 @@ class IncrementDecrementButtons extends Component {
                       style={{fontSize: 14, width: '8%'}}><b>{this.props.orderItem.order_product.numItems}</b></span>
                 <div className="btn-group" role="group">
                     <button type="button" style={{color: 'green', marginRight: 10}}
-                            onClick={() => this.props.onDecrease(this.props.orderItem.id, this.props.orderItem.order_product.numItems, this.props.orderItem.availability)}
+                            onClick={() => this.props.onDecrease(this.props.orderItem.id, this.props.orderItem.order_product.numItems)}
                             className='close'>
                         <span style={{fontSize: 30}}>&minus;</span>
                     </button>

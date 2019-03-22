@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {Redirect} from "react-router-dom";
 import Title from './Title';
 import './Components.css';
+import {NotificationManager} from 'react-notifications';
 
 class Logout extends Component {
     constructor(props) {
@@ -18,6 +19,7 @@ class Logout extends Component {
     logout() {
         console.log("logout");
         localStorage.removeItem('userData');
+        NotificationManager.success('Thank You, Come Again', 'Logged Out Successfully');
         this.setState({redirect: '/'});
     }
 

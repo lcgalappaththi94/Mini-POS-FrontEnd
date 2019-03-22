@@ -5,9 +5,19 @@ class Order extends Component {
 
     renderOpenClose(open) {
         if (open === 1) {
-            return (<span className="badge badge-success">Open</span>);
+            return (<span className="badge badge-success"> Open </span>);
         } else {
-            return (<span className="badge badge-danger">Closed</span>);
+            return (<span className="badge badge-danger"> Closed </span>);
+        }
+    }
+
+    renderDeleteButton(open) {
+        if (open === 1) {
+            return (<button type="button" className="btn btn-md btn-danger" onClick={() => this.props.onDelete(this.props.order.id, this.props.order.products)}
+                            style={{margin: 10}}><b>Delete Order</b></button>);
+        } else {
+            return (<button type="button" className="btn btn-md btn-danger" onClick={() => this.props.onDelete(this.props.order.id, this.props.order.products)}
+                            style={{margin: 10}} disabled><b>Delete Order</b></button>);
         }
     }
 
@@ -39,8 +49,7 @@ class Order extends Component {
                         <button type="button" className="btn btn-md btn-secondary" onClick={() => this.props.onReadMore(this.props.order.id, this.props.open)}>
                             <b>{this.props.open === 1 ? 'View & Edit' : 'View More'}</b>
                         </button>
-                        <button type="button" className="btn btn-md btn-danger" onClick={() => this.props.onDelete(this.props.order.id)}
-                                style={{margin: 10}}><b>Delete Order</b></button>
+                        {this.renderDeleteButton(this.props.open)}
                     </div>
                 </div>
             </React.Fragment>

@@ -48,7 +48,7 @@ class OrderItem extends Component {
                         <div style={{color: 'red', width: '75%'}}>
                             <b>Do you want to delete this item? </b>
                             <input style={{marginLeft: 10, marginRight: 10}} type="button" className="btn btn-sm btn-danger"
-                                   onClick={() => this.props.onDelete(this.props.orderItem.id, this.props.orderItem.order_product.numItems, this.props.orderItem.availability)}
+                                   onClick={() => this.props.onDelete(this.props.orderItem.id, this.props.orderItem.order_product.numItems)}
                                    value="Yes"/>
                             <input style={{marginLeft: 10, marginRight: 10}} type="button" className="btn btn-sm btn-success" onClick={this.cancelConfirmDelete}
                                    value="No"/>

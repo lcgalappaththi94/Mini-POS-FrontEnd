@@ -2,9 +2,8 @@ import React, {Component} from 'react';
 import Products from './Products';
 import OrderItems from './OrderItems';
 import Modal from 'react-modal';
-import ReactNotification from "react-notifications-component";
-import "react-notifications-component/dist/theme.css";
-
+import NetworkCall from "../network";
+import {NotificationManager} from 'react-notifications';
 
 Modal.setAppElement('#root');
 
@@ -14,6 +13,7 @@ class ReadMoreModal extends Component {
         this.state = {
             modalIsOpen: false,
             queriedProducts: [],
+            queryString: '',
             orderItems: [],
             orderId: this.props.orderId
         };
@@ -23,32 +23,31 @@ class ReadMoreModal extends Component {
         this.handleIncreaseItemCount = this.handleIncreaseItemCount.bind(this);
         this.handleDecreaseItemCount = this.handleDecreaseItemCount.bind(this);
         this.handleAddToOrder = this.handleAddToOrder.bind(this);
-        this.addNotification = this.addNotification.bind(this);
-        this.notificationDOMRef = React.createRef();
     }
 
-    addNotification(notificationType, title, message) {
-        let notification = {
-            title: title,
-            message: message,
-            type: notificationType,
-            insert: "top",
-            container: "top-left",
-            animationIn: ["animated", "fadeIn"],
-            animationOut: ["animated", "fadeOut"],
-            dismiss: {duration: 2000},
-            dismissable: {click: true}
-        };
-        this.notificationDOMRef.current.addNotification(notification);
-    }
-
-    updateQueriedProductList(productId, count) {
+    updateQueriedProductListById(productId, availability) {
         let queriedProductList = [...this.state.queriedProducts];
         const similarProduct = queriedProductList.filter(Product => Product.id === productId)[0];
         const index = queriedProductList.indexOf(similarProduct);
         queriedProductList[index] = {...similarProduct};
-        queriedProductList[index].availability += count;
-        return queriedProductList;
+        queriedProductList[index].availability = availability;
+        this.setState({queriedProducts: queriedProductList});
+    }
+
+    updateQueriedProductList(orderProductsList) {
+        if (this.state.queriedProducts) {
+            orderProductsList.map(product => this.updateQueriedProductListById(product.id, product.availability));
+        }
+    }
+
+    updateOrderListById(productId, result, count) {
+        let orderList = [...this.state.orderItems];
+        const orderItem = orderList.filter(orderItem => orderItem.id === productId)[0];
+        const index = orderList.indexOf(orderItem);
+        orderList[index] = {...orderItem};
+        orderList[index].order_product.numItems += count;
+        orderList[index].availability = result.availability;
+        return orderList;
     }
 
     handleAddToOrder(product) {
@@ -56,153 +55,175 @@ class ReadMoreModal extends Component {
         let orderList = [...this.state.orderItems];
         const similarOrderItems = orderList.filter(orderItem => orderItem.id === product.id);
         if (similarOrderItems.length === 0) {
-            let itemCount = prompt("Please enter the required quantity of " + product.name + " (1-" + product.availability + ")", "1");
+            let itemCount = prompt("Please enter the required quantity of " + product.name + " ( 1-" + product.availability + " )", "1");
             let count = parseInt(itemCount);
             if (itemCount != null) {
                 if (count > 0 && count <= product.availability) {
-                    let newOrderItem = {
-                        "id": product.id,
-                        "name": product.name,
-                        "unitPrice": product.unitPrice,
-                        "availability": product.availability - count,
-                        "order_product": {
-                            "numItems": count,
-                            "productId": product.id,
-                            "orderId": this.state.orderId
-                        }
-                    };
-                    let payload = {availability: product.availability - count, numItems: count};
-                    fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + product.id, {
-                        method: 'POST', headers: {
-                            'Content-Type': ' application/json'
-                        }, body: JSON.stringify(payload)
-                    }).then(res => res.json())
+                    let payload = {availability: count};
+                    NetworkCall("/orders/" + this.state.orderId + "/products/" + product.id, "POST", {
+                        'Content-Type': ' application/json'
+                    }, JSON.stringify(payload))
+                        .then(res => res.json())
                         .then((result) => {
-                                if (result.orderId) {
-                                    orderList.push(newOrderItem);
-                                    this.setState({orderItems: orderList, queriedProducts: this.updateQueriedProductList(product.id, -count)});
+                                console.log(result);
+                                if (typeof result.availability !== 'undefined') {
+                                    if (result.availability >= 0) {
+                                        console.log("added to order");
+                                        let newOrderItem = {
+                                            "id": product.id,
+                                            "name": product.name,
+                                            "unitPrice": product.unitPrice,
+                                            "availability": result.availability,
+                                            "order_product": {
+                                                "numItems": count,
+                                                "productId": product.id,
+                                                "orderId": this.state.orderId
+                                            }
+                                        };
+                                        orderList.push(newOrderItem);
+                                        this.updateQueriedProductListById(product.id, result.availability);
+                                        this.setState({orderItems: orderList});
+                                        let modalBodyElements = document.getElementById("modalBodyElements");
+                                        modalBodyElements.scrollTop = modalBodyElements.scrollHeight;
+                                    } else {
+                                        NotificationManager.warning("Sorry only " + -1 * result.availability + " " + product.name + " available now.", 'Quantity Warning');
+                                        this.updateQueriedProductListById(product.id, -1 * result.availability);
+                                    }
                                 }
                             }, (error) => {
                                 console.log("Error occurred while adding product to order", error);
-                                this.addNotification('danger', 'Error Occurred', 'Error occurred while adding product to order');
+                                NotificationManager.error('Error occurred while adding product to order', 'Error Occurred');
                             }
                         );
                 } else {
-                    this.addNotification('warning', 'Warning', "Item count for " + product.name + " should be between 1 and " + product.availability);
+                    NotificationManager.warning("Item count for " + product.name + " should be between 1 and " + product.availability, 'Quantity Warning');
                 }
             } else {
                 console.log("canceled adding product");
             }
         } else {
-            this.addNotification('warning', 'Warning', product.name + " is already added to Order\n You can increase or decrease the quantity");
+            NotificationManager.warning(product.name + " is already added to Order\n You can increase or decrease the quantity", 'Item Already Added');
         }
     }
 
-    handleRemoveItem(productId, currentAmount, available) {
+    handleRemoveItem(productId, currentAmount) {
         console.log("remove order item", productId);
-        let payload = {availability: currentAmount + available};
-        fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + productId, {
-            method: 'DELETE', headers: {
-                'Content-Type': ' application/json'
-            }, body: JSON.stringify(payload)
-        }).then(res => res.json())
+        let payload = {availability: currentAmount};
+        NetworkCall("/orders/" + this.state.orderId + "/products/" + productId, "DELETE", {
+            'Content-Type': ' application/json'
+        }, JSON.stringify(payload))
+            .then(res => res.json())
             .then((result) => {
-                    if (result.productId) {
+                    console.log(result);
+                    if (typeof result.availability !== 'undefined') {
                         const orderItems = this.state.orderItems.filter(orderItem => orderItem.id !== productId);
-                        this.setState({orderItems: orderItems, queriedProducts: this.updateQueriedProductList(productId, currentAmount)});
+                        this.updateQueriedProductListById(productId, result.availability);
+                        this.setState({orderItems: orderItems});
                     }
                 }, (error) => {
                     console.log("Error occurred while removing product from order", error);
-                    this.addNotification('danger', 'Error Occurred', 'Error occurred while removing product from order');
+                    NotificationManager.error('Error occurred while removing product from order', 'Error Occurred');
                 }
             );
     }
 
     handleIncreaseItemCount(productId, currentAmount, available) {
         if (available > 0) {
-            let orderList = [...this.state.orderItems];
-            let payload = {numItems: currentAmount + 1, availability: available - 1};
-            fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + productId, {
-                method: 'PATCH', headers: {
-                    'Content-Type': ' application/json'
-                }, body: JSON.stringify(payload)
-            }).then(res => res.json())
+            let payload = {numItems: currentAmount + 1, availability: 1};
+            NetworkCall("/orders/" + this.state.orderId + "/products/" + productId, "PATCH", {
+                'Content-Type': ' application/json'
+            }, JSON.stringify(payload))
+                .then(res => res.json())
                 .then((result) => {
-                        if (result.numItems) {
-                            const orderItem = orderList.filter(orderItem => orderItem.id === productId)[0];
-                            const index = orderList.indexOf(orderItem);
-                            orderList[index] = {...orderItem};
-                            orderList[index].order_product.numItems++;
-                            orderList[index].availability--;
-                            this.setState({orderItems: orderList, queriedProducts: this.updateQueriedProductList(productId, -1)});
+                        console.log(result);
+                        if (typeof result.availability !== 'undefined') {
+                            this.updateQueriedProductListById(productId, result.availability);
+                            if (result.availability >= 0) {
+                                this.setState({orderItems: this.updateOrderListById(productId, result, 1)});
+                            } else {
+                                this.setState({orderItems: this.updateOrderListById(productId, result, 0)});
+                                NotificationManager.warning("This is the maximum quantity for this item", 'Quantity Warning');
+                            }
                         }
                     }, (error) => {
                         console.log("Error occurred while incrementing product", error);
-                        this.addNotification('danger', 'Error Occurred', 'Error occurred while incrementing product');
+                        NotificationManager.error('Error occurred while incrementing product quantity', 'Error Occurred');
                     }
                 );
             console.log("increase order item", productId);
         } else {
-            this.addNotification('warning', 'Warning', "This is the maximum quantity for this item");
+            NotificationManager.warning("This is the maximum quantity for this item", 'Quantity Warning');
         }
     }
 
-    handleDecreaseItemCount(productId, currentAmount, available) {
+    handleDecreaseItemCount(productId, currentAmount) {
         if (currentAmount - 1 >= 1) {
-            let orderList = [...this.state.orderItems];
-            let payload = {numItems: currentAmount - 1, availability: available + 1};
-            fetch("http://localhost:8081/orders/" + this.state.orderId + "/products/" + productId, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': ' application/json'
-                }, body: JSON.stringify(payload)
-            })
+            let payload = {numItems: currentAmount - 1, availability: -1};
+            NetworkCall("/orders/" + this.state.orderId + "/products/" + productId, "PATCH", {
+                'Content-Type': ' application/json'
+            }, JSON.stringify(payload))
                 .then(res => res.json())
                 .then((result) => {
-                        if (result.numItems) {
-                            const orderItem = orderList.filter(orderItem => orderItem.id === productId)[0];
-                            const index = orderList.indexOf(orderItem);
-                            orderList[index] = {...orderItem};
-                            orderList[index].order_product.numItems--;
-                            orderList[index].availability++;
-                            this.setState({orderItems: orderList, queriedProducts: this.updateQueriedProductList(productId, 1)});
+                        console.log(result);
+                        if (typeof result.availability !== 'undefined') {
+                            this.updateQueriedProductListById(productId, result.availability);
+                            this.setState({
+                                orderItems: this.updateOrderListById(productId, result, -1)
+                            });
                         }
                     }, (error) => {
                         console.log("Error occurred while decreasing product", error);
-                        this.addNotification('danger', 'Error Occurred', 'Error occurred while decreasing product');
+                        NotificationManager.error('Error occurred while decreasing product quantity', 'Error Occurred');
                     }
                 );
             console.log("decrease order item", productId);
         } else {
-            this.addNotification('warning', 'Warning', "Minimum item quantity is 1.\nIf you want to delete item use button(x)");
+            NotificationManager.warning("Minimum item quantity is 1.\nIf you want to delete item use button(x)", 'Quantity Warning');
         }
     }
 
-    componentWillMount() {
-        fetch("http://localhost:8081/orders/" + this.state.orderId, {method: 'GET'})
+    fetchCurrentOrder() {
+        NetworkCall("/orders/" + this.state.orderId, "GET", null, null)
             .then(res => res.json())
             .then((result) => {
-                    this.setState({modalIsOpen: true, orderItems: result.products});
+                    this.updateQueriedProductList(result.products);
+                    this.setState({
+                        modalIsOpen: true,
+                        orderItems: result.products
+                    });
                 }, (error) => {
                     console.log("Error occurred while fetching order details", error);
-                    this.addNotification('danger', 'Error Occurred', 'Error occurred while fetching order details');
+                    NotificationManager.error('Error occurred while fetching order details', 'Error Occurred');
                 }
             );
     }
 
-    onChangeUpdateState(event) {
-        if (event.target.value.length > 0) {
-            fetch("http://localhost:8081/product/" + event.target.value, {method: 'GET'})
+    fetchQueryProducts(query) {
+        if (query !== '') {
+            NetworkCall("/product/" + query, "GET", null, null)
                 .then(res => res.json())
                 .then((result) => {
                         this.setState({queriedProducts: result});
                     }, (error) => {
                         console.log("Error occurred while querying products", error);
-                        this.addNotification('danger', 'Error Occurred', 'Error occurred while querying products');
+                        NotificationManager.error('Error occurred while querying products', 'Error Occurred');
                     }
                 );
+        }
+    }
+
+    onChangeUpdateState(event) {
+        if (event.target.value.length > 0) {
+            this.setState({queryString: event.target.value});
+            this.fetchQueryProducts(event.target.value);
+            if (this.props.realtime) {
+                this.timerQueryProductsFetch = setInterval(() => this.fetchQueryProducts(this.state.queryString), 5000);
+            }
         } else {
-            this.setState({queriedProducts: []});
+            this.setState({queryString: '', queriedProducts: []});
+            if (this.props.realtime) {
+                clearInterval(this.timerQueryProductsFetch);
+            }
         }
     }
 
@@ -212,8 +233,9 @@ class ReadMoreModal extends Component {
 
     renderAddNewProducts(open) {
         if (open) {
-            return (<React.Fragment><h3>Add Products To Order</h3>
-                <input type="text" className="form-control" name="query" onKeyUp={this.onChangeUpdateState} placeholder="Search products Here"
+            return (<React.Fragment>
+                <h3>Add Products To Order</h3>
+                <input type="text" className="form-control" name="query" onKeyUp={this.onChangeUpdateState} placeholder="Search Products Here"
                        autoComplete="off" autoFocus/>
                 <Products products={this.state.queriedProducts} onAdd={this.handleAddToOrder}/>
                 <br/>
@@ -225,7 +247,8 @@ class ReadMoreModal extends Component {
     renderButtons(open) {
         if (open) {
             return (<React.Fragment>
-                <button type="button" className="btn btn-danger" onClick={() => this.props.onDeleteOrder(this.state.orderId)}><b>Delete Order</b></button>
+                <button type="button" className="btn btn-danger" onClick={() => this.props.onDeleteOrder(this.state.orderId, this.state.orderItems)}>
+                    <b>Delete Order</b></button>
                 <button type="button" className="btn btn-info" onClick={() => this.props.onCloseOrder(this.state.orderId)}><b>Finish Order & Close</b></button>
                 <button type="button" className="btn btn-secondary" onClick={() => this.props.onClose(this.state.orderId)}><b>Save & Close</b></button>
             </React.Fragment>);
@@ -236,21 +259,56 @@ class ReadMoreModal extends Component {
         }
     }
 
+    componentWillMount() {
+        this.fetchCurrentOrder();
+        if (this.props.realtime) {
+            this.timerOrderFetch = setInterval(() => this.fetchCurrentOrder(), 5000);
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.props.realtime) {
+            clearInterval(this.timerOrderFetch);
+            clearInterval(this.timerQueryProductsFetch);
+        }
+        this.setState({queryString: '', queriedProducts: []});
+    }
+
+    renderOpenClose(open) {
+        if (open === 1) {
+            return (
+                <React.Fragment>
+                    <h4 className="modal-title" style={{marginLeft: '5%', marginRight: '5%', color: '#FF7433'}}><b>Order Status: </b>
+                        <span style={{fontSize: 16}} className="badge badge-success"> Open </span>
+                    </h4>
+                </React.Fragment>);
+        } else {
+            return (
+                <React.Fragment>
+                    <h4 className="modal-title" style={{marginLeft: '5%', marginRight: '5%', color: '#FF7433'}}><b>Order Status: </b>
+                        <span style={{fontSize: 16}} className="badge badge-danger"> Closed </span>
+                    </h4></React.Fragment>);
+        }
+    }
+
     render() {
         return (
             <React.Fragment>
-                <ReactNotification ref={this.notificationDOMRef}/>
                 <Modal isOpen={this.state.modalIsOpen} onAfterOpen={this.afterOpenModal} className="Model" contentLabel="Order Details Modal">
                     <div className="modal-dialog modal-lg" style={{marginTop: '5%'}}>
                         <div className="modal-content">
                             <div className="modal-header">
-                                <h5 className="modal-title">Order Details of Order <span className="badge badge-primary" style={{fontSize: 16}}>
-                                    {this.state.orderId}</span></h5>
+                                <h4 className="modal-title" style={{marginRight: '5%', color: '#FF7433'}}><b>Order Details of Order: </b><span
+                                    className="badge badge-primary"
+                                    style={{fontSize: 16}}>{this.state.orderId}</span>
+                                </h4>
+                                {this.renderOpenClose(this.props.open)}
                                 <button type="button" style={{color: 'red'}} className="close" onClick={() => this.props.onClose()} aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <div className="modal-body" style={{height: window.innerHeight - 250 + 'px', overflowY: 'scroll', position: 'relative'}}>
+                            <div id="modalBodyElements" className="modal-body"
+                                 style={{height: window.innerHeight - 250 + 'px', overflowY: 'scroll', position: 'relative'}}>
                                 {this.renderAddNewProducts(this.props.open)}
                                 <OrderItems orderItems={this.state.orderItems}
                                             onDelete={this.handleRemoveItem}

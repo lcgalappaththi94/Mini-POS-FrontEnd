@@ -5,8 +5,9 @@ import 'react-confirm-alert/src/react-confirm-alert.css';
 import ReadMoreModel from './ReadMoreModal';
 import Title from './Title';
 import './Components.css';
-import ReactNotification from "react-notifications-component";
-import "react-notifications-component/dist/theme.css";
+import NetworkCall from '../network';
+import {NotificationManager} from 'react-notifications';
+import Switch from "react-switch";
 
 class Orders extends Component {
     constructor(props) {
@@ -16,7 +17,8 @@ class Orders extends Component {
             closedOrderList: [],
             modalIsOpen: false,
             modelOrderId: null,
-            orderIsOpen: 1
+            orderIsOpen: 1,
+            realtime: false
         };
         this.handleDeleteOrder = this.handleDeleteOrder.bind(this);
         this.startNewOrder = this.startNewOrder.bind(this);
@@ -24,28 +26,40 @@ class Orders extends Component {
         this.handleCloseModal = this.handleCloseModal.bind(this);
         this.handleCloseOrder = this.handleCloseOrder.bind(this);
         this.handleReadMore = this.handleReadMore.bind(this);
-        this.addNotification = this.addNotification.bind(this);
-        this.notificationDOMRef = React.createRef();
+        this.fetchOrdersOfUser = this.fetchOrdersOfUser.bind(this);
+        this.handleChangeRealtime = this.handleChangeRealtime.bind(this);
     }
 
-    addNotification(notificationType, title, message) {
-        let notification = {
-            title: title,
-            message: message,
-            type: notificationType,
-            insert: "top",
-            container: "top-left",
-            animationIn: ["animated", "fadeIn"],
-            animationOut: ["animated", "fadeOut"],
-            dismiss: {duration: 2000},
-            dismissable: {click: true}
-        };
-        this.notificationDOMRef.current.addNotification(notification);
+    handleChangeRealtime(checked) {
+        if (checked) {
+            confirmAlert({
+                title: 'Enable Real Time Update',
+                message: 'This is a experimental feature so it will affect the performance of the system',
+                buttons: [
+                    {
+                        label: 'Ok',
+                        onClick: () => {
+                            this.setState({realtime: checked});
+                        }
+                    },
+                    {
+                        label: 'Cancel',
+                        onClick: () => console.log('Realtime update canceled')
+                    }
+                ]
+            });
+        } else {
+            this.setState({realtime: checked});
+        }
     }
 
     handleCloseModal() {
         console.log("handle close model");
-        fetch("http://localhost:8081/user/" + JSON.parse(localStorage.getItem('userData')).id + "/orders", {method: 'GET'})
+        this.fetchOrdersOfUser();
+    }
+
+    fetchOrdersOfUser() {
+        NetworkCall("/user/" + JSON.parse(localStorage.getItem('userData')).id + "/orders", "GET", null, null)
             .then(res => res.json())
             .then((result) => {
                     const activeOrders = result.filter(order => order.open === true);
@@ -53,7 +67,7 @@ class Orders extends Component {
                     this.setState({modalIsOpen: false, activeOrderList: activeOrders, closedOrderList: closedOrders});
                 }, (error) => {
                     console.log("error occurred while fetching orders", error);
-                    this.addNotification('danger', 'Error Occurred', 'Error occurred while fetching orders');
+                    NotificationManager.error('Error occurred while fetching orders', 'Error Occurred');
                 }
             );
     }
@@ -69,18 +83,16 @@ class Orders extends Component {
                 {
                     label: 'Yes',
                     onClick: () => {
-                        fetch("http://localhost:8081/orders/" + orderId,
-                            {
-                                method: 'PATCH',
-                                headers: {
-                                    'Content-Type': ' application/json'
-                                }, body: JSON.stringify(payload)
-                            }).then(res => res.json())
+                        NetworkCall("/orders/" + orderId, "PATCH", {
+                            'Content-Type': ' application/json'
+                        }, JSON.stringify(payload))
+                            .then(res => res.json())
                             .then((result) => {
+                                    NotificationManager.success('Order ' + orderId + ' Finished Successfully', 'Order Finished');
                                     this.handleCloseModal();
                                 }, (error) => {
                                     console.log("error occurred while updating orders", error);
-                                    this.addNotification('danger', 'Error Occurred', 'Error occurred while closing order ' + orderId);
+                                    NotificationManager.error('Error occurred while closing order ' + orderId, 'Error Occurred');
                                 }
                             );
                     }
@@ -94,28 +106,50 @@ class Orders extends Component {
 
     }
 
+    handleRemoveItem(orderId, productId, currentAmount) {
+        console.log("remove order item", productId);
+        let payload = {availability: currentAmount};
+        NetworkCall("/orders/" + orderId + "/products/" + productId, "DELETE", {
+            'Content-Type': ' application/json'
+        }, JSON.stringify(payload))
+            .then(res => res.json())
+            .then((result) => {
+                    console.log(result);
+                    if (typeof result.availability !== 'undefined') {
+                        const orderItems = this.state.orderItems.filter(orderItem => orderItem.id !== productId);
+                        this.updateQueriedProductListById(productId, result.availability);
+                        this.setState({orderItems: orderItems});
+                    }
+                }, (error) => {
+                    console.log("Error occurred while removing product from order", error);
+                    NotificationManager.error('Error occurred while removing product from order', 'Error Occurred');
+                }
+            );
+    }
 
-    handleDeleteOrder(orderId) {
+
+    handleDeleteOrder(orderId, orderItems) {
         console.log("delete order called", orderId);
         confirmAlert({
             title: 'Confirm Delete',
-            message: `Are you sure want to delete order #${orderId}?`,
+            message: `Are you sure want to delete order #${orderId} ?`,
             buttons: [
                 {
                     label: 'Yes',
                     onClick: () => {
-                        fetch("http://localhost:8081/orders/" + orderId, {method: 'DELETE'})
+                        orderItems.map(orderItem => this.handleRemoveItem(orderId, orderItem.id, orderItem.order_product.numItems));
+                        NetworkCall("/orders/" + orderId, "DELETE", null, null)
                             .then(res => res.json())
                             .then((result) => {
                                     if (result.id) {
-                                        const activeOrderList = this.state.activeOrderList.filter(order => order.id !== orderId);
-                                        const closedOrderList = this.state.closedOrderList.filter(order => order.id !== orderId);
-                                        this.addNotification('success', 'Order Deleted', 'Order ' + orderId + ' Successfully Deleted');
+                                        const activeOrderList = this.state.activeOrderList.filter(activeOrder => activeOrder.id !== orderId);
+                                        const closedOrderList = this.state.closedOrderList.filter(closedOrder => closedOrder.id !== orderId);
+                                        NotificationManager.success('Order ' + orderId + ' Deleted Successfully ', 'Order Deleted');
                                         this.setState({modalIsOpen: false, activeOrderList: activeOrderList, closedOrderList: closedOrderList});
                                     }
                                 }, (error) => {
                                     console.log("error occurred while deleting order", error);
-                                    this.addNotification('danger', 'Error Occurred', 'Order ' + orderId + ' Delete Failed');
+                                    NotificationManager.error('Order ' + orderId + ' Delete Failed', 'Error Occurred');
                                 }
                             );
                     }
@@ -136,35 +170,19 @@ class Orders extends Component {
 
 
     startNewOrder() {
-        fetch("http://localhost:8081/user/" + JSON.parse(localStorage.getItem('userData')).id + "/orders", {method: 'POST'})
+        NetworkCall("/user/" + JSON.parse(localStorage.getItem('userData')).id + "/orders", "POST", null, null)
             .then(res => res.json())
             .then((result) => {
                     if (result.id) {
-                        this.addNotification('success', 'New Order Created', 'Order ' + result.id + ' Successfully Created');
+                        NotificationManager.success('Order ' + result.id + ' Created Successfully', 'New Order Created');
                         this.setState({modalIsOpen: true, orderIsOpen: 1, modelOrderId: result.id});
                     }
                 }, (error) => {
                     console.log("error occurred while inserting new order", error);
-                    this.addNotification('danger', 'Error Occurred', 'Error occurred while inserting new order');
+                    NotificationManager.error('Error occurred while inserting new order', 'Error Occurred');
                 }
             );
     }
-
-    componentWillMount() {
-        document.body.style.overflow = 'hidden';
-        fetch("http://localhost:8081/user/" + JSON.parse(localStorage.getItem('userData')).id + "/orders", {method: 'GET'})
-            .then(res => res.json())
-            .then((result) => {
-                    const activeOrders = result.filter(order => order.open === true);
-                    const closedOrders = result.filter(order => order.open === false);
-                    this.setState({activeOrderList: activeOrders, closedOrderList: closedOrders});
-                }, (error) => {
-                    console.log("error occurred while fetching orders", error);
-                    this.addNotification('danger', 'Error Occurred', 'Error occurred while fetching orders');
-                }
-            );
-    }
-
 
     numberOfOrdersRender() {
         if (this.state.activeOrderList.length > 0) {
@@ -177,7 +195,9 @@ class Orders extends Component {
 
     getModelElement() {
         if (this.state.modalIsOpen) {
-            return (<ReadMoreModel orderId={this.state.modelOrderId} open={this.state.orderIsOpen} onCloseOrder={this.handleCloseOrder}
+            return (<ReadMoreModel realtime={this.state.realtime} orderId={this.state.modelOrderId}
+                                   open={this.state.orderIsOpen}
+                                   onCloseOrder={this.handleCloseOrder}
                                    onClose={this.handleCloseModal} onDeleteOrder={this.handleDeleteOrder} calculateTotal={this.calculateOrderTotal}/>);
         }
     }
@@ -209,11 +229,28 @@ class Orders extends Component {
     renderOrderList() {
         return (<React.Fragment>
             <div className="container component">
-                <ReactNotification ref={this.notificationDOMRef}/>
                 <Title/>
                 <h2>Current Orders of<span className="badge m-2 badge-primary">{JSON.parse(localStorage.getItem('userData')).name}</span></h2>
+                <label htmlFor="material-switch" style={{marginTop: 10, marginBottom: 10}}>
+                    <span style={{fontSize: 20}}><b>Realtime Update Product Availability </b></span>
+                    <Switch
+                        onChange={this.handleChangeRealtime} checked={this.state.realtime}
+                        onColor="#86d3ff"
+                        onHandleColor="#2693e6"
+                        handleDiameter={30}
+                        uncheckedIcon={false}
+                        checkedIcon={false}
+                        boxShadow="0px 1px 5px rgba(0, 0, 0, 0.6)"
+                        activeBoxShadow="0px 0px 1px 10px rgba(0, 0, 0, 0.2)"
+                        height={20}
+                        width={48}
+                        className="react-switch"
+                        id="material-switch"
+                    />
+                </label>
                 {this.numberOfOrdersRender()}
-                <button onClick={this.startNewOrder} className="btn btn-md btn-success"><b>Start New Order</b></button>
+                <button onClick={this.startNewOrder} style={{marginRight: 10}} className="btn btn-md btn-success"><b>Start New Order</b></button>
+
                 <hr/>
                 <div style={{height: window.innerHeight - 400 + 'px', overflowY: 'scroll', position: 'relative'}}>
                     <h3>Active Orders</h3>
@@ -227,6 +264,11 @@ class Orders extends Component {
                 <br/>
             </div>
         </React.Fragment>);
+    }
+
+    componentWillMount() {
+        document.body.style.overflow = 'hidden';
+        this.fetchOrdersOfUser();
     }
 
     render() {

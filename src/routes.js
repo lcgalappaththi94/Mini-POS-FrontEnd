@@ -6,12 +6,15 @@ import SignUp from "./components/SignUp"
 import NotFound from "./components/NotFound"
 import NavBar from "./components/NavBar"
 import App from './App';
+import 'react-notifications/lib/notifications.css';
+import {NotificationContainer} from "react-notifications";
 
 const Routes = () => {
     return (
         <React.Fragment>
             <img style={{zIndex: -1, position: 'absolute', width: '100%'}} src={require('./foods.jpg')} alt="Background"/>
             <NavBar/>
+            <NotificationContainer/>
             <Switch>
                 <Route exact path="/" component={App}/>
                 <Route path="/login" component={Login}/>
